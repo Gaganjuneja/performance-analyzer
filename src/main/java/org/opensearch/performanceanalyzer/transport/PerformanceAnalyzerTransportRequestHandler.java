@@ -12,9 +12,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opensearch.action.bulk.BulkShardRequest;
 import org.opensearch.action.support.replication.TransportReplicationAction.ConcreteShardRequest;
+import org.opensearch.cluster.service.ClusterService;
+import org.opensearch.performanceanalyzer.OpenSearchResources;
 import org.opensearch.performanceanalyzer.commons.collectors.StatsCollector;
 import org.opensearch.performanceanalyzer.config.PerformanceAnalyzerController;
 import org.opensearch.tasks.Task;
+import org.opensearch.telemetry.metrics.Counter;
+import org.opensearch.telemetry.metrics.MetricsRegistry;
 import org.opensearch.transport.TransportChannel;
 import org.opensearch.transport.TransportRequest;
 import org.opensearch.transport.TransportRequestHandler;
@@ -27,10 +31,19 @@ public class PerformanceAnalyzerTransportRequestHandler<T extends TransportReque
     private TransportRequestHandler<T> actualHandler;
     boolean logOnce = false;
 
+    private ClusterService clusterService = OpenSearchResources.INSTANCE.getClusterService();
+
+    private MetricsRegistry metricsRegistry = clusterService.getMetricsRegistry();
+    private Counter throughputCounter;
+
     PerformanceAnalyzerTransportRequestHandler(
             TransportRequestHandler<T> actualHandler, PerformanceAnalyzerController controller) {
         this.actualHandler = actualHandler;
         this.controller = controller;
+        this.throughputCounter =
+                metricsRegistry.createCounter(
+                        "pa.throughputCounter", "throughput counter", "bytes");
+        metricsRegistry = clusterService.getMetricsRegistry();
     }
 
     PerformanceAnalyzerTransportRequestHandler<T> set(TransportRequestHandler<T> actualHandler) {
@@ -87,7 +100,8 @@ public class PerformanceAnalyzerTransportRequestHandler<T extends TransportReque
                     bsr.index(),
                     bsr.shardId().id(),
                     bsr.items().length,
-                    bPrimary);
+                    bPrimary,
+                    throughputCounter);
         } catch (Exception ex) {
             if (!logOnce) {
                 LOG.error(ex);
