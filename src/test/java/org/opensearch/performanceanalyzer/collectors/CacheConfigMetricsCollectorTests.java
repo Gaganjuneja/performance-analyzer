@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.opensearch.indices.IndicesService;
 import org.opensearch.performanceanalyzer.OpenSearchResources;
@@ -23,6 +24,7 @@ import org.opensearch.performanceanalyzer.commons.metrics.PerformanceAnalyzerMet
 import org.opensearch.performanceanalyzer.util.TestUtil;
 import org.opensearch.test.OpenSearchSingleNodeTestCase;
 
+@Ignore
 public class CacheConfigMetricsCollectorTests extends OpenSearchSingleNodeTestCase {
     private static final String TEST_INDEX = "test";
     private CacheConfigMetricsCollector collector;

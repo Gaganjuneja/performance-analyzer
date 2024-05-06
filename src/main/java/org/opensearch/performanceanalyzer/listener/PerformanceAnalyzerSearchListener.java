@@ -23,7 +23,6 @@ import org.opensearch.search.internal.SearchContext;
 import org.opensearch.tasks.Task;
 import org.opensearch.telemetry.metrics.Counter;
 import org.opensearch.telemetry.metrics.MetricsRegistry;
-import org.opensearch.telemetry.metrics.noop.NoopMetricsRegistry;
 import org.opensearch.telemetry.metrics.tags.Tags;
 
 public class PerformanceAnalyzerSearchListener
@@ -38,10 +37,13 @@ public class PerformanceAnalyzerSearchListener
 
     public PerformanceAnalyzerSearchListener(final PerformanceAnalyzerController controller) {
         this.controller = controller;
-        this.metricsRegistry = OpenSearchResources.INSTANCE.getClusterService().getMetricsRegistry();
-        if(metricsRegistry != null){
-            searchCPUUtilizationCounter = metricsRegistry.createCounter("pa.core.search.cpuUtilization", "test counter", "1");
-        }else{
+        this.metricsRegistry =
+                OpenSearchResources.INSTANCE.getClusterService().getMetricsRegistry();
+        if (metricsRegistry != null) {
+            searchCPUUtilizationCounter =
+                    metricsRegistry.createCounter(
+                            "pa.core.search.cpuUtilization", "test counter", "1");
+        } else {
             searchCPUUtilizationCounter = null;
         }
     }
@@ -133,20 +135,31 @@ public class PerformanceAnalyzerSearchListener
     @Override
     public void queryPhase(SearchContext searchContext, long tookInNanos) {
         long currTime = System.currentTimeMillis();
-        if(searchCPUUtilizationCounter != null){
+        if (searchCPUUtilizationCounter != null) {
             LOG.info("Adding the addResourceTrackingCompletionListener");
-            searchContext.getTask().addResourceTrackingCompletionListener(new NotifyOnceListener<Task>() {
-                @Override
-                protected void innerOnResponse(Task task) {
-                    LOG.info("Updating the counter");
-                    searchCPUUtilizationCounter.add(task.getTotalResourceStats().getCpuTimeInNanos(), Tags.create().addTag("shardId", searchContext.getTask().getId())
-                            .addTag("indexName", searchContext.shardTarget().getIndex()));
-                }
+            searchContext
+                    .getTask()
+                    .addResourceTrackingCompletionListener(
+                            new NotifyOnceListener<Task>() {
+                                @Override
+                                protected void innerOnResponse(Task task) {
+                                    LOG.info("Updating the counter");
+                                    searchCPUUtilizationCounter.add(
+                                            task.getTotalResourceStats().getCpuTimeInNanos(),
+                                            Tags.create()
+                                                    .addTag(
+                                                            "shardId",
+                                                            searchContext.getTask().getId())
+                                                    .addTag(
+                                                            "indexName",
+                                                            searchContext
+                                                                    .shardTarget()
+                                                                    .getIndex()));
+                                }
 
-                @Override
-                protected void innerOnFailure(Exception e) {
-                }
-            });
+                                @Override
+                                protected void innerOnFailure(Exception e) {}
+                            });
         }
         saveMetricValues(
                 generateFinishMetrics(

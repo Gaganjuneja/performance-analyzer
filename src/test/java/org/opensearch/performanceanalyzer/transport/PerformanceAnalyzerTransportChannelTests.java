@@ -16,6 +16,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.opensearch.core.transport.TransportResponse;
 import org.opensearch.performanceanalyzer.util.Utils;
+import org.opensearch.telemetry.metrics.noop.NoopCounter;
 import org.opensearch.transport.TransportChannel;
 
 public class PerformanceAnalyzerTransportChannelTests {
@@ -32,7 +33,7 @@ public class PerformanceAnalyzerTransportChannelTests {
         Utils.configureMetrics();
         initMocks(this);
         channel = new PerformanceAnalyzerTransportChannel();
-        channel.set(originalChannel, 0, "testIndex", 1, 0, false);
+        channel.set(originalChannel, 0, "testIndex", 1, 0, false, NoopCounter.INSTANCE);
         assertEquals("PerformanceAnalyzerTransportChannelProfile", channel.getProfileName());
         assertEquals("PerformanceAnalyzerTransportChannelType", channel.getChannelType());
         assertEquals(originalChannel, channel.getInnerChannel());
