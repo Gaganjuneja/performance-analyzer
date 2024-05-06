@@ -32,14 +32,14 @@ public class PerformanceAnalyzerSearchListener
     private static final SearchListener NO_OP_SEARCH_LISTENER = new NoOpSearchListener();
     private static final int KEYS_PATH_LENGTH = 4;
     private final PerformanceAnalyzerController controller;
-    private final MetricsRegistry metricsRegistry;
+    private MetricsRegistry metricsRegistry;
     private final Counter searchCPUUtilizationCounter;
 
     public PerformanceAnalyzerSearchListener(final PerformanceAnalyzerController controller) {
         this.controller = controller;
-        this.metricsRegistry =
-                OpenSearchResources.INSTANCE.getClusterService().getMetricsRegistry();
-        if (metricsRegistry != null) {
+        if (OpenSearchResources.INSTANCE.getClusterService() != null && OpenSearchResources.INSTANCE.getClusterService().getMetricsRegistry() != null) {
+            this.metricsRegistry =
+                    OpenSearchResources.INSTANCE.getClusterService().getMetricsRegistry();
             searchCPUUtilizationCounter =
                     metricsRegistry.createCounter(
                             "pa.core.search.cpuUtilization", "test counter", "1");

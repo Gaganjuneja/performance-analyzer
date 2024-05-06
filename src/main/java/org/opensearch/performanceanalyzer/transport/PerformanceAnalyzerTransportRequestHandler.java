@@ -33,17 +33,17 @@ public class PerformanceAnalyzerTransportRequestHandler<T extends TransportReque
 
     private ClusterService clusterService = OpenSearchResources.INSTANCE.getClusterService();
 
-    private MetricsRegistry metricsRegistry = clusterService.getMetricsRegistry();
+    private MetricsRegistry metricsRegistry;
     private Counter cpuUtilizationCounter;
 
     PerformanceAnalyzerTransportRequestHandler(
             TransportRequestHandler<T> actualHandler, PerformanceAnalyzerController controller) {
         this.actualHandler = actualHandler;
         this.controller = controller;
+        this.metricsRegistry = clusterService.getMetricsRegistry();
         this.cpuUtilizationCounter =
                 metricsRegistry.createCounter(
                         "pa.core.cpuUtilizationCounter", "cpuUtilizationCounter", "time");
-        metricsRegistry = clusterService.getMetricsRegistry();
     }
 
     PerformanceAnalyzerTransportRequestHandler<T> set(TransportRequestHandler<T> actualHandler) {
