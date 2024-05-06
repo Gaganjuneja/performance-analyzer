@@ -79,12 +79,11 @@ public class PerformanceAnalyzerTransportChannel implements TransportChannel, Me
     @Override
     public void sendResponse(TransportResponse response) throws IOException {
         if (throughputCounter != null) {
-            LOG.info("Updating the counter inside PATransportChannel");
+            long updatedValue = ManagementFactory.getThreadMXBean().getCurrentThreadCpuTime()
+                    - startCpuTimeNanos;
+            LOG.info("Updating the counter inside PATransportChannel {}", updatedValue);
             throughputCounter.add(
-                    Math.max(
-                            ManagementFactory.getThreadMXBean().getCurrentThreadCpuTime()
-                                    - startCpuTimeNanos,
-                            0),
+                    Math.max(updatedValue, 0),
                     Tags.create().addTag("indexName", indexName).addTag("shardId", shardId));
         }
         emitMetricsFinish(null);
