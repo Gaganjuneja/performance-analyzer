@@ -9,7 +9,9 @@ import static org.opensearch.performanceanalyzer.commons.stats.metrics.StatExcep
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.opensearch.core.action.NotifyOnceListener;
 import org.opensearch.index.shard.SearchOperationListener;
+import org.opensearch.performanceanalyzer.OpenSearchResources;
 import org.opensearch.performanceanalyzer.commons.collectors.StatsCollector;
 import org.opensearch.performanceanalyzer.commons.metrics.AllMetrics.CommonDimension;
 import org.opensearch.performanceanalyzer.commons.metrics.AllMetrics.CommonMetric;
@@ -18,6 +20,11 @@ import org.opensearch.performanceanalyzer.commons.metrics.PerformanceAnalyzerMet
 import org.opensearch.performanceanalyzer.commons.util.ThreadIDUtil;
 import org.opensearch.performanceanalyzer.config.PerformanceAnalyzerController;
 import org.opensearch.search.internal.SearchContext;
+import org.opensearch.tasks.Task;
+import org.opensearch.telemetry.metrics.Counter;
+import org.opensearch.telemetry.metrics.MetricsRegistry;
+import org.opensearch.telemetry.metrics.noop.NoopMetricsRegistry;
+import org.opensearch.telemetry.metrics.tags.Tags;
 
 public class PerformanceAnalyzerSearchListener
         implements SearchOperationListener, SearchListener, MetricsProcessor {
@@ -26,9 +33,17 @@ public class PerformanceAnalyzerSearchListener
     private static final SearchListener NO_OP_SEARCH_LISTENER = new NoOpSearchListener();
     private static final int KEYS_PATH_LENGTH = 4;
     private final PerformanceAnalyzerController controller;
+    private final MetricsRegistry metricsRegistry;
+    private final Counter searchCPUUtilizationCounter;
 
     public PerformanceAnalyzerSearchListener(final PerformanceAnalyzerController controller) {
         this.controller = controller;
+        this.metricsRegistry = OpenSearchResources.INSTANCE.getClusterService().getMetricsRegistry();
+        if(metricsRegistry != null){
+            searchCPUUtilizationCounter = metricsRegistry.createCounter("pa.core.search.cpuUtilization", "test counter", "1");
+        }else{
+            searchCPUUtilizationCounter = null;
+        }
     }
 
     @Override
@@ -118,6 +133,21 @@ public class PerformanceAnalyzerSearchListener
     @Override
     public void queryPhase(SearchContext searchContext, long tookInNanos) {
         long currTime = System.currentTimeMillis();
+        if(searchCPUUtilizationCounter != null){
+            LOG.info("Adding the addResourceTrackingCompletionListener");
+            searchContext.getTask().addResourceTrackingCompletionListener(new NotifyOnceListener<Task>() {
+                @Override
+                protected void innerOnResponse(Task task) {
+                    LOG.info("Updating the counter");
+                    searchCPUUtilizationCounter.add(task.getTotalResourceStats().getCpuTimeInNanos(), Tags.create().addTag("shardId", searchContext.getTask().getId())
+                            .addTag("indexName", searchContext.shardTarget().getIndex()));
+                }
+
+                @Override
+                protected void innerOnFailure(Exception e) {
+                }
+            });
+        }
         saveMetricValues(
                 generateFinishMetrics(
                         currTime,

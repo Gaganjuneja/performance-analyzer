@@ -10,6 +10,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -44,6 +46,7 @@ public class PerformanceAnalyzerTransportChannel implements TransportChannel, Me
     private String id;
     private String threadID;
     private Counter throughputCounter;
+    private Long startCpuTimeNanos;
 
     void set(
             TransportChannel original,
@@ -61,6 +64,7 @@ public class PerformanceAnalyzerTransportChannel implements TransportChannel, Me
         this.threadID = String.valueOf(ThreadIDUtil.INSTANCE.getNativeCurrentThreadId());
         this.startValue = getIOUsage(threadID);
         this.throughputCounter = throughputCounter;
+        startCpuTimeNanos = ManagementFactory.getThreadMXBean().getCurrentThreadCpuTime();
     }
 
     @Override
@@ -75,6 +79,11 @@ public class PerformanceAnalyzerTransportChannel implements TransportChannel, Me
 
     @Override
     public void sendResponse(TransportResponse response) throws IOException {
+        if(throughputCounter != null){
+            LOG.info("Updating the counter inside PATransportChannel");
+            throughputCounter.add(Math.max(ManagementFactory.getThreadMXBean().getCurrentThreadCpuTime() - startCpuTimeNanos, 0),
+                    Tags.create().addTag("indexName", indexName).addTag("shardId", shardId));
+        }
         emitMetricsFinish(null);
         original.sendResponse(response);
     }

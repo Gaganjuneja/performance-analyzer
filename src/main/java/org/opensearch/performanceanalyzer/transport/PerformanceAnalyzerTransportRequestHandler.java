@@ -34,15 +34,15 @@ public class PerformanceAnalyzerTransportRequestHandler<T extends TransportReque
     private ClusterService clusterService = OpenSearchResources.INSTANCE.getClusterService();
 
     private MetricsRegistry metricsRegistry = clusterService.getMetricsRegistry();
-    private Counter throughputCounter;
+    private Counter cpuUtilizationCounter;
 
     PerformanceAnalyzerTransportRequestHandler(
             TransportRequestHandler<T> actualHandler, PerformanceAnalyzerController controller) {
         this.actualHandler = actualHandler;
         this.controller = controller;
-        this.throughputCounter =
+        this.cpuUtilizationCounter =
                 metricsRegistry.createCounter(
-                        "pa.throughputCounter", "throughput counter", "bytes");
+                        "pa.core.cpuUtilizationCounter", "cpuUtilizationCounter", "time");
         metricsRegistry = clusterService.getMetricsRegistry();
     }
 
@@ -101,7 +101,7 @@ public class PerformanceAnalyzerTransportRequestHandler<T extends TransportReque
                     bsr.shardId().id(),
                     bsr.items().length,
                     bPrimary,
-                    throughputCounter);
+                    cpuUtilizationCounter);
         } catch (Exception ex) {
             if (!logOnce) {
                 LOG.error(ex);
