@@ -149,7 +149,7 @@ public class PerformanceAnalyzerSearchListener
                                             Tags.create()
                                                     .addTag(
                                                             "shardId",
-                                                            searchContext.getTask().getId())
+                                                            searchContext.shardTarget().getShardId().getId())
                                                     .addTag(
                                                             "indexName",
                                                             searchContext

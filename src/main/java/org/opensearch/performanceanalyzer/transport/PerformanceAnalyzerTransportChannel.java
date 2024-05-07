@@ -5,6 +5,7 @@
 
 package org.opensearch.performanceanalyzer.transport;
 
+import com.sun.management.ThreadMXBean;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -46,6 +47,7 @@ public class PerformanceAnalyzerTransportChannel implements TransportChannel, Me
     private String threadID;
     private Counter throughputCounter;
     private Long startCpuTimeNanos;
+    private long jvmThreadID;
 
     void set(
             TransportChannel original,
@@ -64,6 +66,8 @@ public class PerformanceAnalyzerTransportChannel implements TransportChannel, Me
         this.startValue = getIOUsage(threadID);
         this.throughputCounter = throughputCounter;
         this.startCpuTimeNanos = ManagementFactory.getThreadMXBean().getCurrentThreadCpuTime();
+        jvmThreadID = Thread.currentThread().getId();
+        LOG.info("Updating the counter Start thread {} {}", jvmThreadID, Thread.currentThread().getName());
     }
 
     @Override
@@ -78,10 +82,11 @@ public class PerformanceAnalyzerTransportChannel implements TransportChannel, Me
 
     @Override
     public void sendResponse(TransportResponse response) throws IOException {
+        LOG.info("Updating the counter Finish thread {}", Thread.currentThread().getName());
         if (throughputCounter != null) {
-            long updatedValue = ManagementFactory.getThreadMXBean().getCurrentThreadCpuTime()
-                    - startCpuTimeNanos;
-            LOG.info("Updating the counter inside PATransportChannel {}", updatedValue);
+            long timeNow = ((ThreadMXBean)ManagementFactory.getThreadMXBean()).getThreadCpuTime(jvmThreadID);
+            long updatedValue = timeNow - startCpuTimeNanos;
+            LOG.info("Updating the counter inside PATransportChannel {} start time {}, now {}", updatedValue, startCpuTimeNanos, timeNow);
             throughputCounter.add(
                     Math.max(updatedValue, 0),
                     Tags.create().addTag("indexName", indexName).addTag("shardId", shardId));
