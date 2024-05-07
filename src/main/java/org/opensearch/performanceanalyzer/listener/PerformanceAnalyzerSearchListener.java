@@ -23,6 +23,7 @@ import org.opensearch.search.internal.SearchContext;
 import org.opensearch.tasks.Task;
 import org.opensearch.telemetry.metrics.Counter;
 import org.opensearch.telemetry.metrics.MetricsRegistry;
+import org.opensearch.telemetry.metrics.noop.NoopCounter;
 import org.opensearch.telemetry.metrics.tags.Tags;
 
 public class PerformanceAnalyzerSearchListener
@@ -135,7 +136,7 @@ public class PerformanceAnalyzerSearchListener
     @Override
     public void queryPhase(SearchContext searchContext, long tookInNanos) {
         long currTime = System.currentTimeMillis();
-        if (searchCPUUtilizationCounter != null) {
+        if (searchCPUUtilizationCounter != null && !(searchCPUUtilizationCounter instanceof NoopCounter)) {
             LOG.info("Adding the addResourceTrackingCompletionListener");
             searchContext
                     .getTask()

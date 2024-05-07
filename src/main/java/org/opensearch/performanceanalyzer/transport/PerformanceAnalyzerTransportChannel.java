@@ -26,6 +26,7 @@ import org.opensearch.performanceanalyzer.commons.os.ThreadDiskIO;
 import org.opensearch.performanceanalyzer.commons.stats.metrics.StatExceptionCode;
 import org.opensearch.performanceanalyzer.commons.util.ThreadIDUtil;
 import org.opensearch.telemetry.metrics.Counter;
+import org.opensearch.telemetry.metrics.noop.NoopCounter;
 import org.opensearch.telemetry.metrics.tags.Tags;
 import org.opensearch.transport.TransportChannel;
 
@@ -83,7 +84,7 @@ public class PerformanceAnalyzerTransportChannel implements TransportChannel, Me
     @Override
     public void sendResponse(TransportResponse response) throws IOException {
         LOG.info("Updating the counter Finish thread {}", Thread.currentThread().getName());
-        if (throughputCounter != null) {
+        if (throughputCounter != null && !(throughputCounter instanceof NoopCounter)) {
             long timeNow = ((ThreadMXBean)ManagementFactory.getThreadMXBean()).getThreadCpuTime(jvmThreadID);
             long updatedValue = timeNow - startCpuTimeNanos;
             LOG.info("Updating the counter inside PATransportChannel {} start time {}, now {}", updatedValue, startCpuTimeNanos, timeNow);
