@@ -12,7 +12,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opensearch.action.bulk.BulkShardRequest;
 import org.opensearch.action.support.replication.TransportReplicationAction.ConcreteShardRequest;
-import org.opensearch.cluster.service.ClusterService;
 import org.opensearch.performanceanalyzer.OpenSearchResources;
 import org.opensearch.performanceanalyzer.commons.collectors.StatsCollector;
 import org.opensearch.performanceanalyzer.config.PerformanceAnalyzerController;
@@ -31,8 +30,6 @@ public class PerformanceAnalyzerTransportRequestHandler<T extends TransportReque
     private TransportRequestHandler<T> actualHandler;
     boolean logOnce = false;
 
-    private ClusterService clusterService = OpenSearchResources.INSTANCE.getClusterService();
-
     private MetricsRegistry metricsRegistry;
     private Counter cpuUtilizationCounter;
 
@@ -40,7 +37,8 @@ public class PerformanceAnalyzerTransportRequestHandler<T extends TransportReque
             TransportRequestHandler<T> actualHandler, PerformanceAnalyzerController controller) {
         this.actualHandler = actualHandler;
         this.controller = controller;
-        this.metricsRegistry = clusterService.getMetricsRegistry();
+        this.metricsRegistry =
+                OpenSearchResources.INSTANCE.getTelemetryService().getMetricsRegistry();
         this.cpuUtilizationCounter =
                 metricsRegistry.createCounter(
                         "pa.core.cpuUtilizationCounter", "cpuUtilizationCounter", "time");

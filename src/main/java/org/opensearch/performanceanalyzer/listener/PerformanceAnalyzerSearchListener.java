@@ -38,9 +38,11 @@ public class PerformanceAnalyzerSearchListener
 
     public PerformanceAnalyzerSearchListener(final PerformanceAnalyzerController controller) {
         this.controller = controller;
-        if (OpenSearchResources.INSTANCE.getClusterService() != null && OpenSearchResources.INSTANCE.getClusterService().getMetricsRegistry() != null) {
+        if (OpenSearchResources.INSTANCE.getTelemetryService() != null
+                && OpenSearchResources.INSTANCE.getTelemetryService().getMetricsRegistry()
+                        != null) {
             this.metricsRegistry =
-                    OpenSearchResources.INSTANCE.getClusterService().getMetricsRegistry();
+                    OpenSearchResources.INSTANCE.getTelemetryService().getMetricsRegistry();
             searchCPUUtilizationCounter =
                     metricsRegistry.createCounter(
                             "pa.core.search.cpuUtilization", "test counter", "1");
@@ -136,7 +138,8 @@ public class PerformanceAnalyzerSearchListener
     @Override
     public void queryPhase(SearchContext searchContext, long tookInNanos) {
         long currTime = System.currentTimeMillis();
-        if (searchCPUUtilizationCounter != null && !(searchCPUUtilizationCounter instanceof NoopCounter)) {
+        if (searchCPUUtilizationCounter != null
+                && !(searchCPUUtilizationCounter instanceof NoopCounter)) {
             LOG.info("Adding the addResourceTrackingCompletionListener");
             searchContext
                     .getTask()
@@ -150,7 +153,10 @@ public class PerformanceAnalyzerSearchListener
                                             Tags.create()
                                                     .addTag(
                                                             "shardId",
-                                                            searchContext.shardTarget().getShardId().getId())
+                                                            searchContext
+                                                                    .shardTarget()
+                                                                    .getShardId()
+                                                                    .getId())
                                                     .addTag(
                                                             "indexName",
                                                             searchContext

@@ -11,6 +11,7 @@ import org.opensearch.common.settings.Settings;
 import org.opensearch.core.indices.breaker.CircuitBreakerService;
 import org.opensearch.env.Environment;
 import org.opensearch.indices.IndicesService;
+import org.opensearch.telemetry.service.TelemetryService;
 import org.opensearch.threadpool.ThreadPool;
 
 public final class OpenSearchResources {
@@ -25,6 +26,7 @@ public final class OpenSearchResources {
     private java.nio.file.Path configPath;
     private String pluginFileLocation;
     private Client client;
+    private TelemetryService telemetryService;
 
     private OpenSearchResources() {
         threadPool = null;
@@ -107,5 +109,13 @@ public final class OpenSearchResources {
 
     public Client getClient() {
         return client;
+    }
+
+    public TelemetryService getTelemetryService() {
+        return telemetryService;
+    }
+
+    public void setTelemetryService(TelemetryService telemetryService) {
+        this.telemetryService = telemetryService;
     }
 }

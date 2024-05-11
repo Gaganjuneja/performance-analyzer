@@ -68,7 +68,10 @@ public class PerformanceAnalyzerTransportChannel implements TransportChannel, Me
         this.throughputCounter = throughputCounter;
         this.startCpuTimeNanos = ManagementFactory.getThreadMXBean().getCurrentThreadCpuTime();
         jvmThreadID = Thread.currentThread().getId();
-        LOG.info("Updating the counter Start thread {} {}", jvmThreadID, Thread.currentThread().getName());
+        LOG.info(
+                "Updating the counter Start thread {} {}",
+                jvmThreadID,
+                Thread.currentThread().getName());
     }
 
     @Override
@@ -85,9 +88,15 @@ public class PerformanceAnalyzerTransportChannel implements TransportChannel, Me
     public void sendResponse(TransportResponse response) throws IOException {
         LOG.info("Updating the counter Finish thread {}", Thread.currentThread().getName());
         if (throughputCounter != null && !(throughputCounter instanceof NoopCounter)) {
-            long timeNow = ((ThreadMXBean)ManagementFactory.getThreadMXBean()).getThreadCpuTime(jvmThreadID);
+            long timeNow =
+                    ((ThreadMXBean) ManagementFactory.getThreadMXBean())
+                            .getThreadCpuTime(jvmThreadID);
             long updatedValue = timeNow - startCpuTimeNanos;
-            LOG.info("Updating the counter inside PATransportChannel {} start time {}, now {}", updatedValue, startCpuTimeNanos, timeNow);
+            LOG.info(
+                    "Updating the counter inside PATransportChannel {} start time {}, now {}",
+                    updatedValue,
+                    startCpuTimeNanos,
+                    timeNow);
             throughputCounter.add(
                     Math.max(updatedValue, 0),
                     Tags.create().addTag("indexName", indexName).addTag("shardId", shardId));

@@ -91,6 +91,7 @@ import org.opensearch.plugins.SearchPlugin;
 import org.opensearch.repositories.RepositoriesService;
 import org.opensearch.rest.RestController;
 import org.opensearch.script.ScriptService;
+import org.opensearch.telemetry.service.TelemetryService;
 import org.opensearch.telemetry.tracing.Tracer;
 import org.opensearch.threadpool.ThreadPool;
 import org.opensearch.transport.Transport;
@@ -380,5 +381,10 @@ public final class PerformanceAnalyzerPlugin extends Plugin
                 PerformanceAnalyzerClusterSettings.COMPOSITE_PA_SETTING,
                 PerformanceAnalyzerClusterSettings.PA_NODE_STATS_SETTING,
                 PerformanceAnalyzerClusterSettings.CONFIG_OVERRIDES_SETTING);
+    }
+
+    @Override
+    public void setTelemetryService(TelemetryService telemetryService) {
+        OpenSearchResources.INSTANCE.setTelemetryService(telemetryService);
     }
 }
