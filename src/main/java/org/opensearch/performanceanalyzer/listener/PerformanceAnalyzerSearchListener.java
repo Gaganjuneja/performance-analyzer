@@ -38,11 +38,8 @@ public class PerformanceAnalyzerSearchListener
 
     public PerformanceAnalyzerSearchListener(final PerformanceAnalyzerController controller) {
         this.controller = controller;
-        if (OpenSearchResources.INSTANCE.getTelemetryService() != null
-                && OpenSearchResources.INSTANCE.getTelemetryService().getMetricsRegistry()
-                        != null) {
-            this.metricsRegistry =
-                    OpenSearchResources.INSTANCE.getTelemetryService().getMetricsRegistry();
+        if (OpenSearchResources.INSTANCE.getMetricsRegistry() != null) {
+            this.metricsRegistry = OpenSearchResources.INSTANCE.getMetricsRegistry();
             searchCPUUtilizationCounter =
                     metricsRegistry.createCounter(
                             "pa.core.search.cpuUtilization", "test counter", "1");

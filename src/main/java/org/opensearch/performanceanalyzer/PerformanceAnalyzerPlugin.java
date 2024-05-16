@@ -88,10 +88,11 @@ import org.opensearch.plugins.ActionPlugin;
 import org.opensearch.plugins.NetworkPlugin;
 import org.opensearch.plugins.Plugin;
 import org.opensearch.plugins.SearchPlugin;
+import org.opensearch.plugins.TelemetryAwarePlugin;
 import org.opensearch.repositories.RepositoriesService;
 import org.opensearch.rest.RestController;
 import org.opensearch.script.ScriptService;
-import org.opensearch.telemetry.service.TelemetryService;
+import org.opensearch.telemetry.metrics.MetricsRegistry;
 import org.opensearch.telemetry.tracing.Tracer;
 import org.opensearch.threadpool.ThreadPool;
 import org.opensearch.transport.Transport;
@@ -99,7 +100,7 @@ import org.opensearch.transport.TransportInterceptor;
 import org.opensearch.watcher.ResourceWatcherService;
 
 public final class PerformanceAnalyzerPlugin extends Plugin
-        implements ActionPlugin, NetworkPlugin, SearchPlugin {
+        implements ActionPlugin, NetworkPlugin, SearchPlugin, TelemetryAwarePlugin {
     private static final Logger LOG = LogManager.getLogger(PerformanceAnalyzerPlugin.class);
     public static final String PLUGIN_NAME = "opensearch-performance-analyzer";
     private static final String ADD_FAULT_DETECTION_METHOD = "addFaultDetectionListener";
@@ -384,7 +385,21 @@ public final class PerformanceAnalyzerPlugin extends Plugin
     }
 
     @Override
-    public void setTelemetryService(TelemetryService telemetryService) {
-        OpenSearchResources.INSTANCE.setTelemetryService(telemetryService);
+    public Collection<Object> createComponents(
+            Client client,
+            ClusterService clusterService,
+            ThreadPool threadPool,
+            ResourceWatcherService resourceWatcherService,
+            ScriptService scriptService,
+            NamedXContentRegistry xContentRegistry,
+            Environment environment,
+            NodeEnvironment nodeEnvironment,
+            NamedWriteableRegistry namedWriteableRegistry,
+            IndexNameExpressionResolver indexNameExpressionResolver,
+            Supplier<RepositoriesService> repositoriesServiceSupplier,
+            Tracer tracer,
+            MetricsRegistry metricsRegistry) {
+        OpenSearchResources.INSTANCE.setMetricsRegistry(metricsRegistry);
+        return Collections.emptyList();
     }
 }

@@ -37,8 +37,7 @@ public class PerformanceAnalyzerTransportRequestHandler<T extends TransportReque
             TransportRequestHandler<T> actualHandler, PerformanceAnalyzerController controller) {
         this.actualHandler = actualHandler;
         this.controller = controller;
-        this.metricsRegistry =
-                OpenSearchResources.INSTANCE.getTelemetryService().getMetricsRegistry();
+        this.metricsRegistry = OpenSearchResources.INSTANCE.getMetricsRegistry();
         this.cpuUtilizationCounter =
                 metricsRegistry.createCounter(
                         "pa.core.cpuUtilizationCounter", "cpuUtilizationCounter", "time");
