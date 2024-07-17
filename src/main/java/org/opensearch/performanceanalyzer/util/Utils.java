@@ -8,6 +8,8 @@ package org.opensearch.performanceanalyzer.util;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.opensearch.action.admin.indices.stats.CommonStats;
 import org.opensearch.action.admin.indices.stats.CommonStatsFlags;
 import org.opensearch.action.admin.indices.stats.IndexShardStats;
@@ -27,6 +29,7 @@ import org.opensearch.performanceanalyzer.commons.metrics.MetricsConfiguration;
 import org.opensearch.performanceanalyzer.commons.stats.ServiceMetrics;
 
 public class Utils {
+    private static final Logger LOG = LogManager.getLogger(Utils.class);
 
     public static void configureMetrics() {
         ServiceMetrics.initStatsReporter();
@@ -108,4 +111,11 @@ public class Utils {
                     IndexShardState.RECOVERING,
                     IndexShardState.POST_RECOVERY,
                     IndexShardState.STARTED);
+
+    public static double calculateCPUUtilization(long totalCpuTime, long scClkTck, long totalTime) {
+        LOG.debug("totalCpuTime {}", totalCpuTime);
+        LOG.debug("scClkTck {}", scClkTck);
+        LOG.debug("totalTime {}", totalTime);
+        return (1.0e3 * totalCpuTime / Math.max(1, scClkTck)) / Math.max(1, totalTime);
+    }
 }

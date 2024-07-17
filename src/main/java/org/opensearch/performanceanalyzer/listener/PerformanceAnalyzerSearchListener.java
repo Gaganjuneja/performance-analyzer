@@ -16,6 +16,7 @@ import org.opensearch.performanceanalyzer.commons.metrics.AllMetrics.CommonMetri
 import org.opensearch.performanceanalyzer.commons.metrics.MetricsProcessor;
 import org.opensearch.performanceanalyzer.commons.metrics.PerformanceAnalyzerMetrics;
 import org.opensearch.performanceanalyzer.commons.util.ThreadIDUtil;
+import org.opensearch.performanceanalyzer.commons.util.Util;
 import org.opensearch.performanceanalyzer.config.PerformanceAnalyzerController;
 import org.opensearch.search.internal.SearchContext;
 
@@ -37,7 +38,14 @@ public class PerformanceAnalyzerSearchListener
     }
 
     private SearchListener getSearchListener() {
-        return controller.isPerformanceAnalyzerEnabled() ? this : NO_OP_SEARCH_LISTENER;
+        return isSearchListenerEnabled() ? this : NO_OP_SEARCH_LISTENER;
+    }
+
+    private boolean isSearchListenerEnabled() {
+        return controller.isPerformanceAnalyzerEnabled()
+                && (controller.getCollectorsSettingValue() == Util.CollectorMode.DUAL.getValue()
+                        || controller.getCollectorsSettingValue()
+                                == Util.CollectorMode.RCA.getValue());
     }
 
     @Override
