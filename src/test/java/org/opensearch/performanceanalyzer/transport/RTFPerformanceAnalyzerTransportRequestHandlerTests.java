@@ -10,6 +10,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -46,7 +47,7 @@ public class RTFPerformanceAnalyzerTransportRequestHandlerTests {
     public void init() {
         // this test only runs in Linux system
         // as some of the static members of the ThreadList class are specific to Linux
-        // org.junit.Assume.assumeTrue(SystemUtils.IS_OS_LINUX);
+        org.junit.Assume.assumeTrue(SystemUtils.IS_OS_LINUX);
         Utils.configureMetrics();
         initMocks(this);
         handler =

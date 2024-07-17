@@ -13,9 +13,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.IOException;
+import org.apache.commons.lang3.SystemUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.opensearch.core.index.Index;
 import org.opensearch.core.index.shard.ShardId;
 import org.opensearch.core.transport.TransportResponse;
@@ -31,12 +33,14 @@ public class RTFPerformanceAnalyzerTransportChannelTests {
     @Mock private TransportResponse response;
     @Mock private Histogram cpuUtilizationHistogram;
     private ShardId shardId;
+    @Mock private ShardId mockedShardId;
+    @Mock private Index index;
 
     @Before
     public void init() {
         // this test only runs in Linux system
         // as some of the static members of the ThreadList class are specific to Linux
-        // org.junit.Assume.assumeTrue(SystemUtils.IS_OS_LINUX);
+        org.junit.Assume.assumeTrue(SystemUtils.IS_OS_LINUX);
         Utils.configureMetrics();
         initMocks(this);
         String indexName = "testIndex";
@@ -61,5 +65,18 @@ public class RTFPerformanceAnalyzerTransportChannelTests {
         channel.sendResponse(exception);
         verify(originalChannel).sendResponse(exception);
         verify(cpuUtilizationHistogram, times(1)).record(anyDouble(), any(Tags.class));
+    }
+
+    @Test
+    public void testRecordCPUUtilizationMetric() {
+        RTFPerformanceAnalyzerTransportChannel channel =
+                new RTFPerformanceAnalyzerTransportChannel();
+        channel.set(originalChannel, cpuUtilizationHistogram, "testIndex", mockedShardId, false);
+        Mockito.when(mockedShardId.getIndex()).thenReturn(index);
+        Mockito.when(index.getName()).thenReturn("myTestIndex");
+        Mockito.when(index.getUUID()).thenReturn("abc-def");
+        channel.recordCPUUtilizationMetric(mockedShardId, 10l, "bulkShard", false);
+        Mockito.verify(cpuUtilizationHistogram)
+                .record(Mockito.anyDouble(), Mockito.any(Tags.class));
     }
 }

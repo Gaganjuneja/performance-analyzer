@@ -5,6 +5,7 @@
 
 package org.opensearch.performanceanalyzer.transport;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.sun.management.ThreadMXBean;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -93,7 +94,8 @@ public final class RTFPerformanceAnalyzerTransportChannel implements TransportCh
                 totalCpuTime, scClkTck, phaseStartTime - System.nanoTime());
     }
 
-    private void recordCPUUtilizationMetric(
+    @VisibleForTesting
+    void recordCPUUtilizationMetric(
             ShardId shardId, double cpuUtilization, String operation, boolean isFailed) {
         cpuUtilizationHistogram.record(
                 cpuUtilization,

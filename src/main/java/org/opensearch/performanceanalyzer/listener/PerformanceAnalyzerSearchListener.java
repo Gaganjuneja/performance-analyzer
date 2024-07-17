@@ -7,6 +7,7 @@ package org.opensearch.performanceanalyzer.listener;
 
 import static org.opensearch.performanceanalyzer.commons.stats.metrics.StatExceptionCode.OPENSEARCH_REQUEST_INTERCEPTOR_ERROR;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opensearch.index.shard.SearchOperationListener;
@@ -37,7 +38,8 @@ public class PerformanceAnalyzerSearchListener
         return PerformanceAnalyzerSearchListener.class.getSimpleName();
     }
 
-    private SearchListener getSearchListener() {
+    @VisibleForTesting
+    SearchListener getSearchListener() {
         return isSearchListenerEnabled() ? this : NO_OP_SEARCH_LISTENER;
     }
 
