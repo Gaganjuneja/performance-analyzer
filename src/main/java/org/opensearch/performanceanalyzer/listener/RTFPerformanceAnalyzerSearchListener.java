@@ -58,6 +58,7 @@ public class RTFPerformanceAnalyzerSearchListener
                     "CPU Utilization per shard for an operation",
                     "rate");
         } else {
+            LOG.debug("MetricsRegistry is null");
             return null;
         }
     }
@@ -73,6 +74,7 @@ public class RTFPerformanceAnalyzerSearchListener
     }
 
     private boolean isSearchListenerEnabled() {
+        LOG.debug("Controller enable status {}, CollectorMode value {}", controller.isPerformanceAnalyzerEnabled(), controller.getCollectorsSettingValue());
         return cpuUtilizationHistogram != null
                 && controller.isPerformanceAnalyzerEnabled()
                 && (controller.getCollectorsSettingValue() == Util.CollectorMode.DUAL.getValue()
@@ -156,7 +158,7 @@ public class RTFPerformanceAnalyzerSearchListener
     public void failedQueryPhase(SearchContext searchContext) {
         long queryStartTime = threadLocal.get().getOrDefault(QUERY_START_TIME, 0l);
         addCPUResourceTrackingCompletionListener(
-                searchContext, queryStartTime, OPERATION_SHARD_FETCH, true);
+                searchContext, queryStartTime, OPERATION_SHARD_QUERY, true);
     }
 
     @Override
