@@ -59,9 +59,15 @@ public class RTFPerformanceAnalyzerSearchListenerTests {
     @Before
     public void init() {
         initMocks(this);
-        Mockito.when(controller.isPerformanceAnalyzerEnabled()).thenReturn(true);
-        searchListener = new RTFPerformanceAnalyzerSearchListener(controller);
         OpenSearchResources.INSTANCE.setMetricsRegistry(metricsRegistry);
+        Mockito.when(controller.isPerformanceAnalyzerEnabled()).thenReturn(true);
+        Mockito.when(
+                        metricsRegistry.createHistogram(
+                                Mockito.eq("CPU_Utilization"),
+                                Mockito.anyString(),
+                                Mockito.eq("rate")))
+                .thenReturn(histogram);
+        searchListener = new RTFPerformanceAnalyzerSearchListener(controller);
         assertEquals(
                 RTFPerformanceAnalyzerSearchListener.class.getSimpleName(),
                 searchListener.toString());
@@ -70,16 +76,18 @@ public class RTFPerformanceAnalyzerSearchListenerTests {
     @Test
     public void tesSearchListener() {
         Mockito.when(controller.getCollectorsSettingValue())
-                .thenReturn(Util.CollectorMode.TELEMETRY.getValue());
+                .thenReturn(Util.CollectorMode.RCA.getValue());
         assertTrue(searchListener.getSearchListener() instanceof NoOpSearchListener);
 
         Mockito.when(controller.getCollectorsSettingValue())
-                .thenReturn(Util.CollectorMode.RCA.getValue());
-        assertTrue(searchListener.getSearchListener() instanceof PerformanceAnalyzerSearchListener);
+                .thenReturn(Util.CollectorMode.TELEMETRY.getValue());
+        assertTrue(
+                searchListener.getSearchListener() instanceof RTFPerformanceAnalyzerSearchListener);
 
         Mockito.when(controller.getCollectorsSettingValue())
                 .thenReturn(Util.CollectorMode.DUAL.getValue());
-        assertTrue(searchListener.getSearchListener() instanceof PerformanceAnalyzerSearchListener);
+        assertTrue(
+                searchListener.getSearchListener() instanceof RTFPerformanceAnalyzerSearchListener);
     }
 
     @Test
@@ -173,6 +181,7 @@ public class RTFPerformanceAnalyzerSearchListenerTests {
     private void initializeValidSearchContext(boolean isValid) {
         if (isValid) {
             Mockito.when(searchContext.request()).thenReturn(shardSearchRequest);
+            Mockito.when(searchContext.getTask()).thenReturn(task);
             Mockito.when(shardSearchRequest.shardId()).thenReturn(shardId);
         } else {
             Mockito.when(searchContext.request()).thenReturn(null);
