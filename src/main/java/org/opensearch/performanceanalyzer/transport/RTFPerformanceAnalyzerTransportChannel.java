@@ -42,6 +42,8 @@ public final class RTFPerformanceAnalyzerTransportChannel implements TransportCh
     private ShardId shardId;
     private boolean primary;
 
+    private long threadID;
+
     void set(
             TransportChannel original,
             Histogram cpuUtilizationHistogram,
@@ -55,7 +57,9 @@ public final class RTFPerformanceAnalyzerTransportChannel implements TransportCh
         this.primary = bPrimary;
 
         this.operationStartTime = System.nanoTime();
-        this.cpuStartTime = threadMXBean.getCurrentThreadCpuTime();
+        threadID = Thread.currentThread().getId();
+        this.cpuStartTime = threadMXBean.getThreadCpuTime(threadID);
+        LOG.info("111 - Thread Name {}", Thread.currentThread().getName());
         this.scClkTck = OSGlobals.getScClkTck();
     }
 
@@ -88,8 +92,9 @@ public final class RTFPerformanceAnalyzerTransportChannel implements TransportCh
     }
 
     private double calculateCPUUtilization(long phaseStartTime, long phaseCPUStartTime) {
+        LOG.info("111 - Thread Name-1 {}", Thread.currentThread().getName());
         long totalCpuTime =
-                Math.min(0, (threadMXBean.getCurrentThreadCpuTime() - phaseCPUStartTime));
+                Math.max(0, (threadMXBean.getThreadCpuTime(threadID) - phaseCPUStartTime));
         return Utils.calculateCPUUtilization(
                 totalCpuTime, scClkTck, System.nanoTime() - phaseStartTime);
     }

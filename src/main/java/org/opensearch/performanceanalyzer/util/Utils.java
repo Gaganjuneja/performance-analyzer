@@ -116,6 +116,6 @@ public class Utils {
         LOG.debug("totalCpuTime {}", totalCpuTime);
         LOG.debug("scClkTck {}", scClkTck);
         LOG.debug("totalTime {}", totalTime);
-        return (1.0e3 * totalCpuTime / Math.max(1, scClkTck)) / Math.max(1, totalTime);
+        return (1.0e3 * Math.max(0, totalCpuTime) / Math.max(1, scClkTck)) / Math.max(1, totalTime);
     }
 }
