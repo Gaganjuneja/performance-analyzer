@@ -43,6 +43,7 @@ public final class RTFPerformanceAnalyzerTransportChannel implements TransportCh
     private boolean primary;
 
     private long threadID;
+    private int numProcessors;
 
     void set(
             TransportChannel original,
@@ -59,6 +60,7 @@ public final class RTFPerformanceAnalyzerTransportChannel implements TransportCh
         this.operationStartTime = System.nanoTime();
         threadID = Thread.currentThread().getId();
         this.cpuStartTime = threadMXBean.getThreadCpuTime(threadID);
+        this.numProcessors = Runtime.getRuntime().availableProcessors();
         LOG.info("111 - Thread Name {}", Thread.currentThread().getName());
         this.scClkTck = OSGlobals.getScClkTck();
     }
@@ -96,7 +98,7 @@ public final class RTFPerformanceAnalyzerTransportChannel implements TransportCh
         long totalCpuTime =
                 Math.max(0, (threadMXBean.getThreadCpuTime(threadID) - phaseCPUStartTime));
         return Utils.calculateCPUUtilization(
-                totalCpuTime, scClkTck, System.nanoTime() - phaseStartTime);
+                numProcessors, (System.nanoTime() - phaseStartTime), totalCpuTime);
     }
 
     @VisibleForTesting

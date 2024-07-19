@@ -112,10 +112,15 @@ public class Utils {
                     IndexShardState.POST_RECOVERY,
                     IndexShardState.STARTED);
 
-    public static double calculateCPUUtilization(long totalCpuTime, long scClkTck, long totalTime) {
-        LOG.debug("totalCpuTime {}", totalCpuTime);
-        LOG.debug("scClkTck {}", scClkTck);
-        LOG.debug("totalTime {}", totalTime);
-        return (1.0e3 * Math.max(0, totalCpuTime) / Math.max(1, scClkTck)) / Math.max(1, totalTime);
+    public static double calculateCPUUtilization(
+            int numProcessors, long totalOperationTime, long cpuUsageTime) {
+        LOG.debug("totalCpuTime {}", cpuUsageTime);
+        LOG.debug("totalOperationTime {}", totalOperationTime);
+        LOG.debug("numProcessors {}", numProcessors);
+        if (totalOperationTime == 0l || cpuUsageTime == 0l || numProcessors == 0) {
+            return 0.0d;
+        }
+        double totalAvailableCPUTime = Double.valueOf(totalOperationTime * numProcessors);
+        return cpuUsageTime / totalAvailableCPUTime;
     }
 }

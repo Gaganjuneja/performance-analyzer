@@ -21,7 +21,6 @@ import org.opensearch.core.index.Index;
 import org.opensearch.core.index.shard.ShardId;
 import org.opensearch.core.tasks.resourcetracker.TaskResourceUsage;
 import org.opensearch.performanceanalyzer.OpenSearchResources;
-import org.opensearch.performanceanalyzer.commons.stats.metrics.StatExceptionCode;
 import org.opensearch.performanceanalyzer.commons.util.Util;
 import org.opensearch.performanceanalyzer.config.PerformanceAnalyzerController;
 import org.opensearch.search.internal.SearchContext;
@@ -32,9 +31,6 @@ import org.opensearch.telemetry.metrics.MetricsRegistry;
 import org.opensearch.telemetry.metrics.tags.Tags;
 
 public class RTFPerformanceAnalyzerSearchListenerTests {
-    private static final long TOOK_IN_NANOS = 10;
-    private static final String EXCEPTION =
-            StatExceptionCode.OPENSEARCH_REQUEST_INTERCEPTOR_ERROR.toString();
 
     private RTFPerformanceAnalyzerSearchListener searchListener;
 
@@ -44,7 +40,8 @@ public class RTFPerformanceAnalyzerSearchListenerTests {
     @Mock private PerformanceAnalyzerController controller;
     @Mock private SearchShardTask task;
     @Mock private MetricsRegistry metricsRegistry;
-    @Mock private Histogram histogram;
+    @Mock private Histogram cpuUtilizationHistogram;
+    @Mock private Histogram heapUsedHistogram;
     @Mock private Index index;
 
     @Mock private TaskResourceUsage taskResourceUsage;
@@ -66,7 +63,11 @@ public class RTFPerformanceAnalyzerSearchListenerTests {
                                 Mockito.eq("CPU_Utilization"),
                                 Mockito.anyString(),
                                 Mockito.eq("rate")))
-                .thenReturn(histogram);
+                .thenReturn(cpuUtilizationHistogram);
+        Mockito.when(
+                        metricsRegistry.createHistogram(
+                                Mockito.eq("heap_used"), Mockito.anyString(), Mockito.eq("bytes")))
+                .thenReturn(heapUsedHistogram);
         searchListener = new RTFPerformanceAnalyzerSearchListener(controller);
         assertEquals(
                 RTFPerformanceAnalyzerSearchListener.class.getSimpleName(),
@@ -95,12 +96,6 @@ public class RTFPerformanceAnalyzerSearchListenerTests {
         initializeValidSearchContext(true);
         Mockito.when(controller.getCollectorsSettingValue())
                 .thenReturn(Util.CollectorMode.TELEMETRY.getValue());
-        Mockito.when(
-                        metricsRegistry.createHistogram(
-                                Mockito.eq("CPU_Utilization"),
-                                Mockito.anyString(),
-                                Mockito.eq("rate")))
-                .thenReturn(histogram);
         searchListener.preQueryPhase(searchContext);
         searchListener.queryPhase(searchContext, 0l);
         Mockito.verify(task).addResourceTrackingCompletionListener(Mockito.any());
@@ -111,12 +106,6 @@ public class RTFPerformanceAnalyzerSearchListenerTests {
         initializeValidSearchContext(true);
         Mockito.when(controller.getCollectorsSettingValue())
                 .thenReturn(Util.CollectorMode.TELEMETRY.getValue());
-        Mockito.when(
-                        metricsRegistry.createHistogram(
-                                Mockito.eq("CPU_Utilization"),
-                                Mockito.anyString(),
-                                Mockito.eq("rate")))
-                .thenReturn(histogram);
         searchListener.preQueryPhase(searchContext);
         searchListener.failedQueryPhase(searchContext);
         Mockito.verify(task).addResourceTrackingCompletionListener(Mockito.any());
@@ -127,12 +116,6 @@ public class RTFPerformanceAnalyzerSearchListenerTests {
         initializeValidSearchContext(true);
         Mockito.when(controller.getCollectorsSettingValue())
                 .thenReturn(Util.CollectorMode.TELEMETRY.getValue());
-        Mockito.when(
-                        metricsRegistry.createHistogram(
-                                Mockito.eq("CPU_Utilization"),
-                                Mockito.anyString(),
-                                Mockito.eq("rate")))
-                .thenReturn(histogram);
         searchListener.preFetchPhase(searchContext);
         searchListener.fetchPhase(searchContext, 0l);
         Mockito.verify(task).addResourceTrackingCompletionListener(Mockito.any());
@@ -143,12 +126,6 @@ public class RTFPerformanceAnalyzerSearchListenerTests {
         initializeValidSearchContext(true);
         Mockito.when(controller.getCollectorsSettingValue())
                 .thenReturn(Util.CollectorMode.TELEMETRY.getValue());
-        Mockito.when(
-                        metricsRegistry.createHistogram(
-                                Mockito.eq("CPU_Utilization"),
-                                Mockito.anyString(),
-                                Mockito.eq("rate")))
-                .thenReturn(histogram);
         searchListener.preFetchPhase(searchContext);
         searchListener.failedFetchPhase(searchContext);
         Mockito.verify(task).addResourceTrackingCompletionListener(Mockito.any());
@@ -157,12 +134,6 @@ public class RTFPerformanceAnalyzerSearchListenerTests {
     @Test
     public void testTaskCompletionListener() {
         initializeValidSearchContext(true);
-        Mockito.when(
-                        metricsRegistry.createHistogram(
-                                Mockito.eq("CPU_Utilization"),
-                                Mockito.anyString(),
-                                Mockito.eq("rate")))
-                .thenReturn(histogram);
         RTFPerformanceAnalyzerSearchListener rtfSearchListener =
                 new RTFPerformanceAnalyzerSearchListener(controller);
 
@@ -175,7 +146,9 @@ public class RTFPerformanceAnalyzerSearchListenerTests {
         NotifyOnceListener<Task> taskCompletionListener =
                 rtfSearchListener.createListener(searchContext, 0l, "test", false);
         taskCompletionListener.onResponse(task);
-        Mockito.verify(histogram).record(Mockito.anyDouble(), Mockito.any(Tags.class));
+        Mockito.verify(cpuUtilizationHistogram)
+                .record(Mockito.anyDouble(), Mockito.any(Tags.class));
+        Mockito.verify(heapUsedHistogram).record(Mockito.anyDouble(), Mockito.any(Tags.class));
     }
 
     private void initializeValidSearchContext(boolean isValid) {
