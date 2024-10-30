@@ -140,25 +140,31 @@ public class RTFHeapMetricsCollector extends PerformanceAnalyzerMetricsCollector
             heapUsedMetrics.record(
                     memoryUsage.getUsed(),
                     Tags.create().addTag(memTypeAttributeKey, entry.getKey()));
-            createGaugeInstanceIfNotAvailable(entry.getKey(), memoryUsage);
+            createGaugeInstanceIfNotAvailable(entry.getKey());
         }
     }
 
-    private void createGaugeInstanceIfNotAvailable(String key, MemoryUsage memoryUsage) {
+    private void createGaugeInstanceIfNotAvailable(String key) {
         if (!memTypeToGaugeObservableMap.containsKey(key)) {
+            LOG.info("Gauge doesn't exist for the mem type {}", key);
             Closeable observableGauge =
                     metricsRegistry.createGauge(
                             RTFMetrics.HeapValue.Constants.MAX_VALUE,
                             "Heap Max PA metrics",
                             "",
-                            () -> (double) memoryUsage.getMax(),
+                            () -> getValue(key),
                             Tags.create().addTag(memTypeAttributeKey, key));
             memTypeToGaugeObservableMap.put(key, observableGauge);
         }
     }
 
-    private double getMaxValueForMemTypeAttribute(
-            String memTypeAttributeKey, MemoryUsage memoryUsage) {
-        return memoryUsage.getMax();
+    private double getValue(String key) {
+        Map<String, Supplier<MemoryUsage>> memoryUsageSuppliers = HeapMetrics.getMemoryUsageSuppliers();
+        if(memoryUsageSuppliers.get(key) != null){
+            MemoryUsage memoryUsage = memoryUsageSuppliers.get(key).get();
+            return memoryUsage.getMax();
+        }else{
+            return 0.0;
+        }
     }
 }
